@@ -32,5 +32,5 @@ target_link_libraries(chesscodec PRIVATE chesscodec_lib)
 enable_testing()
 
 add_executable(roundtrip_tests tests/roundtrip_tests.cpp)
-target_link_libraries(roundtrip_tests PRIVATE chesscodec_lib Threads::Threads)
+target_link_libraries(roundtrip_tests PRIVATE chesscodec_lib)
 add_test(NAME roundtrip_tests COMMAND roundtrip_tests)
