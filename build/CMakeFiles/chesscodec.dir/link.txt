@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/chesscodec.dir/link.d CMakeFiles/chesscodec.dir/src/main.cpp.o -o chesscodec  libchesscodec_lib.a
