@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/roundtrip_tests.dir/link.d CMakeFiles/roundtrip_tests.dir/tests/roundtrip_tests.cpp.o -o roundtrip_tests  libchesscodec_lib.a

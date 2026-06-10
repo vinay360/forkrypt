@@ -26,6 +26,9 @@ target_compile_options(chesscodec_lib PRIVATE
 add_executable(chesscodec src/main.cpp)
 target_link_libraries(chesscodec PRIVATE chesscodec_lib)
 
+add_executable(chesscodec_server src/server_main.cpp)
+target_link_libraries(chesscodec_server PRIVATE chesscodec_lib pthread)
+
 enable_testing()
 
 add_executable(roundtrip_tests tests/roundtrip_tests.cpp)

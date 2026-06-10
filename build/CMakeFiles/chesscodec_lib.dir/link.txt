@@ -1,2 +1,0 @@
-/usr/bin/ar qc libchesscodec_lib.a CMakeFiles/chesscodec_lib.dir/src/bitstream.cpp.o CMakeFiles/chesscodec_lib.dir/src/file_io.cpp.o CMakeFiles/chesscodec_lib.dir/src/game_state.cpp.o CMakeFiles/chesscodec_lib.dir/src/pgn_writer.cpp.o CMakeFiles/chesscodec_lib.dir/src/pgn_reader.cpp.o CMakeFiles/chesscodec_lib.dir/src/encoder.cpp.o CMakeFiles/chesscodec_lib.dir/src/decoder.cpp.o
-/usr/bin/ranlib libchesscodec_lib.a

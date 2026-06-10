@@ -23,6 +23,7 @@ roundtrip_tests
 *.out
 /decoded.txt
 /out.pgn
+storage/
 
 # OS and editor metadata
 .DS_Store

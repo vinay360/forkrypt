@@ -1,6 +1,0 @@
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/chesscodec_lib.dir
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/chesscodec.dir
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/roundtrip_tests.dir
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/test.dir
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/edit_cache.dir
-/home/vinay/code/projects/forkrypt/build/CMakeFiles/rebuild_cache.dir
