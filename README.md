@@ -41,3 +41,5 @@ The test binary round-trips empty data, a one-byte file, random 1 KB data, and s
 ```bash
 CHESSCODEC_LARGE_TESTS=1 ctest --test-dir build
 ```
+
+The tests also exercise concurrent round-trips to verify the codec can be used from multiple threads.

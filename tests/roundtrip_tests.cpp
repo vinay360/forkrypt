@@ -4,10 +4,13 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <thread>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -171,6 +174,35 @@ void roundTrip(const std::filesystem::path& dir, const std::string& name, const 
         throw std::runtime_error("SHA-256 mismatch for " + name);
     }
 }
+
+void roundTripInParallel(const std::filesystem::path& dir) {
+    constexpr size_t threadCount = 4;
+    std::mutex exceptionMutex;
+    std::exception_ptr firstFailure;
+    std::vector<std::thread> workers;
+    workers.reserve(threadCount);
+
+    for (size_t i = 0; i < threadCount; ++i) {
+        workers.emplace_back([&, i]() {
+            try {
+                roundTrip(dir, "parallel_" + std::to_string(i), randomBytes(2048 + i * 512));
+            } catch (...) {
+                std::lock_guard<std::mutex> lock(exceptionMutex);
+                if (!firstFailure) {
+                    firstFailure = std::current_exception();
+                }
+            }
+        });
+    }
+
+    for (auto& worker : workers) {
+        worker.join();
+    }
+
+    if (firstFailure) {
+        std::rethrow_exception(firstFailure);
+    }
+}
 }
 
 int main() {
@@ -184,6 +216,7 @@ int main() {
         roundTrip(dir, "png_fixture", {0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 0x0d, 'I', 'H', 'D', 'R'});
         roundTrip(dir, "zip_fixture", {'P', 'K', 3, 4, 20, 0, 0, 0, 8, 0, 1, 2, 3, 4, 0xaa, 0xbb});
         roundTrip(dir, "exe_fixture", {'M', 'Z', 0x90, 0, 3, 0, 0, 0, 4, 0, 0, 0xff, 0xff, 0, 0xb8, 0});
+        roundTripInParallel(dir);
 
         if (std::getenv("CHESSCODEC_LARGE_TESTS")) {
             roundTrip(dir, "random_1mb", randomBytes(1024 * 1024));

@@ -4,6 +4,23 @@
 
 #include <ctime>
 #include <iomanip>
+#include <optional>
+
+namespace {
+std::optional<std::tm> safeLocalTime(std::time_t now) {
+    std::tm tm{};
+#if defined(_WIN32)
+    if (localtime_s(&tm, &now) != 0) {
+        return std::nullopt;
+    }
+#else
+    if (localtime_r(&now, &tm) == nullptr) {
+        return std::nullopt;
+    }
+#endif
+    return tm;
+}
+}
 
 PGNWriter::PGNWriter(const std::string& path) : output_(path) {
     if (!output_) {
@@ -23,12 +40,12 @@ void PGNWriter::beginGame() {
     }
 
     const std::time_t now = std::time(nullptr);
-    const std::tm* tm = std::localtime(&now);
+    const auto tm = safeLocalTime(now);
 
     output_ << "[Event \"Binary File Encoding\"]\n";
     output_ << "[Site \"?\"]\n";
     if (tm) {
-        output_ << "[Date \"" << std::put_time(tm, "%Y.%m.%d") << "\"]\n";
+        output_ << "[Date \"" << std::put_time(&*tm, "%Y.%m.%d") << "\"]\n";
     } else {
         output_ << "[Date \"????.??.??\"]\n";
     }

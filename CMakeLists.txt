@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Threads REQUIRED)
+
 add_library(chesscodec_lib
     src/bitstream.cpp
     src/file_io.cpp
@@ -17,6 +19,7 @@ add_library(chesscodec_lib
 )
 
 target_include_directories(chesscodec_lib PUBLIC include)
+target_link_libraries(chesscodec_lib PUBLIC Threads::Threads)
 
 target_compile_options(chesscodec_lib PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
@@ -29,5 +32,5 @@ target_link_libraries(chesscodec PRIVATE chesscodec_lib)
 enable_testing()
 
 add_executable(roundtrip_tests tests/roundtrip_tests.cpp)
-target_link_libraries(roundtrip_tests PRIVATE chesscodec_lib)
+target_link_libraries(roundtrip_tests PRIVATE chesscodec_lib Threads::Threads)
 add_test(NAME roundtrip_tests COMMAND roundtrip_tests)
