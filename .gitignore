@@ -1,1 +1,36 @@
-build
+# Build outputs
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Binaries and libraries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+chesscodec
+roundtrip_tests
+
+# Test and codec artifacts
+*.pgn
+*.out
+/decoded.txt
+/out.pgn
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Windows alternate data stream files copied onto Unix filesystems
+*:Zone.Identifier

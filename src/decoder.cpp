@@ -5,8 +5,10 @@
 #include "pgn_reader.hpp"
 
 #include <algorithm>
+#include <iostream>
 
-ChessDecoder::PayloadSink::PayloadSink(FileWriter& writer) : writer_(writer) {
+ChessDecoder::PayloadSink::PayloadSink(FileWriter& writer, bool showProgress)
+    : writer_(writer), showProgress_(showProgress) {
     metadata_.reserve(8);
 }
 
@@ -42,6 +44,10 @@ void ChessDecoder::PayloadSink::finish() {
     if (bytesWritten_ != expectedSize_) {
         throw CodecError("Decoding size mismatch: PGN ended before output file was complete");
     }
+    progress_.store(expectedSize_, std::memory_order_relaxed);
+    if (bar_) {
+        bar_->done();
+    }
     writer_.flush();
 }
 
@@ -54,6 +60,15 @@ void ChessDecoder::PayloadSink::consumeByte(uint8_t byte) {
                 expectedSize_ = (expectedSize_ << 8U) | b;
             }
             haveSize_ = true;
+            if (showProgress_) {
+                barkeep::ProgressBarConfig<uint64_t> cfg;
+                cfg.out = &std::cerr;
+                cfg.total = expectedSize_;
+                cfg.message = "Decoding";
+                cfg.speed = 0.2;
+                cfg.speed_unit = "B/s";
+                bar_ = barkeep::ProgressBar(&progress_, cfg);
+            }
         }
         return;
     }
@@ -61,21 +76,32 @@ void ChessDecoder::PayloadSink::consumeByte(uint8_t byte) {
     if (bytesWritten_ < expectedSize_) {
         writer_.writeByte(byte);
         ++bytesWritten_;
+        progress_.store(bytesWritten_, std::memory_order_relaxed);
     }
 }
 
-void ChessDecoder::decode(const std::string& inputPgnPath, const std::string& outputPath) {
+uint64_t ChessDecoder::PayloadSink::expectedSize() const noexcept {
+    return expectedSize_;
+}
+
+uint64_t ChessDecoder::PayloadSink::bytesWritten() const noexcept {
+    return bytesWritten_;
+}
+
+void ChessDecoder::decode(const std::string& inputPgnPath, const std::string& outputPath, bool showProgress) {
     FileWriter file(outputPath);
-    PayloadSink sink(file);
+    PayloadSink sink(file, showProgress);
     GameState game;
     PGNReader reader;
+    uint64_t movesRead = 0;
+    uint64_t gamesRead = 0;
 
     reader.read(
         inputPgnPath,
         [&game]() {
             game.reset();
         },
-        [&game, &sink](std::string_view san) {
+        [&game, &sink, &movesRead](std::string_view san) {
             const auto legalMoves = game.legalMoves();
             if (legalMoves.empty()) {
                 throw CodecError("Illegal PGN: move encountered in a terminal position");
@@ -102,8 +128,15 @@ void ChessDecoder::decode(const std::string& inputPgnPath, const std::string& ou
 
             sink.writeBits(static_cast<uint64_t>(index), usable);
             game.play(played);
+            ++movesRead;
         },
-        []() {});
+        [&gamesRead]() {
+            ++gamesRead;
+        });
 
     sink.finish();
+    if (showProgress) {
+        std::cerr << "Decoded " << sink.bytesWritten() << " data bytes from " << movesRead
+                  << " moves across " << gamesRead << " PGN game(s).\n";
+    }
 }

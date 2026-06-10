@@ -29,6 +29,7 @@ bool FileReader::readByte(uint8_t& byte) {
         const uint32_t shift = (7U - metadataIndex_) * 8U;
         byte = static_cast<uint8_t>((size_ >> shift) & 0xffU);
         ++metadataIndex_;
+        ++bytesEmitted_;
         return true;
     }
 
@@ -38,11 +39,16 @@ bool FileReader::readByte(uint8_t& byte) {
     }
 
     byte = static_cast<uint8_t>(static_cast<unsigned char>(c));
+    ++bytesEmitted_;
     return true;
 }
 
 uint64_t FileReader::size() const noexcept {
     return size_;
+}
+
+uint64_t FileReader::bytesEmitted() const noexcept {
+    return bytesEmitted_;
 }
 
 FileWriter::FileWriter(const std::string& path) : output_(path, std::ios::binary) {

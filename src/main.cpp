@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
     try {
         const std::string mode = argv[1];
         if (mode == "encode") {
-            ChessEncoder{}.encode(argv[2], argv[3]);
+            ChessEncoder{}.encode(argv[2], argv[3], true);
         } else if (mode == "decode") {
-            ChessDecoder{}.decode(argv[2], argv[3]);
+            ChessDecoder{}.decode(argv[2], argv[3], true);
         } else {
             usage();
             return 2;

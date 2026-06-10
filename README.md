@@ -18,6 +18,8 @@ ctest --test-dir build
 sha256sum input.bin recovered.bin
 ```
 
+The CLI displays a `barkeep` progress bar on standard error. Encoding tracks bytes consumed from the virtual payload, including the 8-byte metadata prefix. Decoding starts its byte progress bar after the metadata has been reconstructed and the original output size is known. Both commands also print the number of data bytes, chess moves, and PGN games processed.
+
 ## Encoding Math
 
 For each position, the codec asks Disservin's chess library for legal moves. If there are `N` legal moves, it can encode `floor(log2(N))` bits because only a power-of-two subset can map uniformly to bit patterns. For example, `37` legal moves gives `5` usable bits, so only the first `32` sorted legal moves are used.

@@ -4,5 +4,5 @@
 
 class ChessEncoder {
 public:
-    void encode(const std::string& inputPath, const std::string& outputPgnPath);
+    void encode(const std::string& inputPath, const std::string& outputPgnPath, bool showProgress = false);
 };

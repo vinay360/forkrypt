@@ -10,10 +10,12 @@ public:
 
     bool readByte(uint8_t& byte);
     uint64_t size() const noexcept;
+    uint64_t bytesEmitted() const noexcept;
 
 private:
     std::ifstream input_;
     uint64_t size_ = 0;
+    uint64_t bytesEmitted_ = 0;
     uint32_t metadataIndex_ = 0;
 };
 

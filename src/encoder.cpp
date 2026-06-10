@@ -1,18 +1,40 @@
 #include "encoder.hpp"
 
 #include "bitstream.hpp"
+#include "barkeep.hpp"
 #include "codec_error.hpp"
 #include "file_io.hpp"
 #include "game_state.hpp"
 #include "pgn_writer.hpp"
 
+#include <atomic>
 #include <cstdint>
+#include <iostream>
 
-void ChessEncoder::encode(const std::string& inputPath, const std::string& outputPgnPath) {
+namespace {
+constexpr uint64_t metadataBytes = 8;
+}
+
+void ChessEncoder::encode(const std::string& inputPath, const std::string& outputPgnPath, bool showProgress) {
     FileReader file(inputPath);
     BitReader bits(file);
     PGNWriter pgn(outputPgnPath);
     GameState game;
+    const uint64_t totalBytes = file.size() + metadataBytes;
+    uint64_t movesWritten = 0;
+    uint64_t gamesWritten = 1;
+
+    std::atomic<uint64_t> progress{0};
+    std::shared_ptr<barkeep::BaseDisplay> bar;
+    if (showProgress) {
+        barkeep::ProgressBarConfig<uint64_t> cfg;
+        cfg.out = &std::cerr;
+        cfg.total = totalBytes;
+        cfg.message = "Encoding";
+        cfg.speed = 0.2;
+        cfg.speed_unit = "B/s";
+        bar = barkeep::ProgressBar(&progress, cfg);
+    }
 
     pgn.beginGame();
 
@@ -21,6 +43,7 @@ void ChessEncoder::encode(const std::string& inputPath, const std::string& outpu
             pgn.endGame();
             game.reset();
             pgn.beginGame();
+            ++gamesWritten;
         }
 
         const auto moves = game.legalMoves();
@@ -28,6 +51,7 @@ void ChessEncoder::encode(const std::string& inputPath, const std::string& outpu
             pgn.endGame();
             game.reset();
             pgn.beginGame();
+            ++gamesWritten;
             continue;
         }
 
@@ -39,6 +63,7 @@ void ChessEncoder::encode(const std::string& inputPath, const std::string& outpu
         } else if (!bits.readBits(usable, index)) {
             break;
         }
+        progress.store(file.bytesEmitted(), std::memory_order_relaxed);
 
         if (index >= moves.size()) {
             throw CodecError("Internal encoder error: move index outside legal move list");
@@ -50,7 +75,15 @@ void ChessEncoder::encode(const std::string& inputPath, const std::string& outpu
         const std::string san = chess::uci::moveToSan(game.board(), move);
         pgn.writeMove(san, whiteToMove, fullMoveNumber);
         game.play(move);
+        ++movesWritten;
     }
 
+    progress.store(totalBytes, std::memory_order_relaxed);
+    if (bar) {
+        bar->done();
+        std::cerr << "Encoded " << file.size() << " data bytes (" << totalBytes
+                  << " bytes including metadata) into " << movesWritten << " moves across "
+                  << gamesWritten << " PGN game(s).\n";
+    }
     pgn.endGame();
 }
